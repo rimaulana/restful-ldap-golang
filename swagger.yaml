@@ -1,0 +1,250 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Restful Active Directory User API
+  description: >-
+    Enable Active Directory user authentication and manipulation (changing  and reseting user password) via Restfull API
+  termsOfService: terms
+  contact:
+    name: Rio Maulana
+    url: 'https://www.github.com/rimaulana'
+    email: rimaulana@outlook.com
+  license:
+    name: MIT
+    url: 'http://opensource.org/licenses/MIT'
+host: localhost:8080
+tags:
+  - name: /
+    description: health check
+  - name: user
+    description: routes and actions on Active Directory user
+schemes:
+  - http
+paths:
+  /:
+    get:
+      tags: 
+      - /
+      summary: health check endpoint
+      description: >-
+        check whether the API is running and listening to requests
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Return code when server is running and listening to requests
+          schema:
+            type: object
+            properties:
+              process:
+                type: string
+                example: Health check
+              version:
+                type: string
+                example: 1.0.0
+              ok:
+                type: boolean
+                example: true
+  /user/{username}:
+    get:
+      tags:
+      - user
+      summary: get user information
+      description: >-
+        request to get user information
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: x-access-token
+          required: true
+          type: string
+          description: key to authorized call to this pat
+        - in: path
+          name: username
+          required: true
+          type: string
+          description: username of the user with @domain.com
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: success
+              message:
+                type: object
+                properties:
+                  position:
+                    type: string
+                    example: System Engineer
+                  fullname:
+                    type: string
+                    example: Rio I. Maulana
+        403:
+          description: Error in token identification value could be access token invalid or access token required
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+                example: message
+    patch:
+      tags:
+      - user
+      summary: change user password
+      description: >-
+        Change user password by sending a resquest to server with provided authentication token.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: x-access-token
+          required: true
+          type: string
+          description: key to authorized call to this path
+        - in: path
+          name: username
+          required: true
+          type: string
+          description: username of the user we are going to reset with @domain.com
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              auth_token:
+                type: string
+                example: ABCDEFGHIJKLMNO
+              new_password:
+                type: string
+                example: Base 64 encoded
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: succes
+              message:
+                type: string
+                example: password changed
+        403:
+          description: Error in token identification value could be access token invalid or access token required
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+                example: message
+  /user/{username}/reset:
+    post:
+      tags: 
+      - user
+      summary:  request to reset user password
+      description: >-
+        This request doesn't automatically reset/change user's password. Instead, it will send an email with a link to change user's password.
+      consumes: 
+        - application/json
+      produces: 
+        - application/json
+      parameters: 
+        - in: header
+          name: x-access-token
+          required: true
+          type: string
+          description: key to authorized call to this path
+        - in: path
+          name: username
+          required: true
+          type: string
+          description: username of the user we are going to reset with @domain.com
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: success
+              message:
+                type: string
+                example: An email has been sent to username@domain.com
+        403:
+          description: Error in token identification value could be access token invalid or access token required
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+                example: message
+        500:
+          description: >-
+            Error when username couldn't be found or no email address is define in Active Directory user email information
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+                example: Couldn't find user you are looking for
+  /user/{username}/auth:
+    post:
+      tags: 
+      - user
+      summary: verify whether user is authorized to change password
+      description: >-
+        This request will authorized user against active directory by tring to authenticate it to active directory
+      consumes: 
+      - application/json
+      produces: 
+      - application/json
+      parameters: 
+        - in: header
+          name: x-access-token
+          required: true
+          type: string
+          description: key to authorized call to this path
+        - in: path
+          name: username
+          required: true
+          type: string
+          description: username of the user we are going to reset with @domain.com
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              password:
+                type: string
+                example: Base64 encoded
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: success
+              message:
+                type: string
+                example: authenticated!
+        403:
+          description: >-
+            - Error in token identification value could be access token invalid or access token required
+             - username and password doesn't match
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+                example: message
